@@ -14,8 +14,15 @@ when the input file is entered, we parse it and send it to ChatGPT that generate
 then you can run the output file and see the results.
 
 """
+import os
 from pathlib import Path
 from typing import List, Union, Dict, Any, Optional, Tuple, Callable, TypeVar, Generic, Type, Set, Iterable, Iterator
+import timeit
+import openai
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def get_file_from_path(path: Path) -> str:
@@ -52,3 +59,95 @@ def send_file_to_openai(file: str, batch_size: int = 10) -> List[str]:
     """send file to openai"""
     batches = send_file_in_batch_to_gpt(file, batch_size)
     return [send_batch_to_openai(batch) for batch in batches]
+
+
+def create_typed_python_file(api_key: str, prompt: str, window: int = 20, max_len: int = 100, max_tokens=42):
+    import openai
+    logger.info("creating a story")
+    openai.api_key = api_key
+    logger.info("api key is set")
+    story = prompt
+    logger.info("story is set")
+    while len(story.split(" ")) < max_len:
+        logger.info("story is less than max_len - starting to generate the next piece of the story")
+        response = openai.Completion.create(
+            model="text-davinci-003",
+            prompt=prompt,
+            max_tokens=max_tokens,
+            temperature=0
+        )
+        logger.info(f"response is ready - {response.choices[0].text}")
+        old_story = story
+        story += response.choices[0].text
+        if old_story == story:
+            logger.info("story is not changing - breaking the loop")
+            break
+        logger.info(f"story is ready - {story}")
+        prompt = " ".join(story.split(" ")[-window:])
+        logger.info(f"next prompt is ready - {prompt}")
+    import pprint
+    pprint.pprint(story)
+
+    return story
+
+
+if __name__ == '__main__':
+    # prompt = "please complete this story: \nThis is story about two friends that went out for a tour in northern india, they've went down from the bus in the city of delhi and then ...  "
+    # prompt = "please generate a function that will get a list of numbers and return the sum of the numbers: \n def sum_of_numbers(numbers):"
+    # prompt = "please create a small flask application that helps students to sign they're courses\n Notes: make this function with types, logs and well documented:"
+    python_file = open("/Users/itayd/PycharmProjects/AutoPyType/examples/example.py", "r").read()
+    prompt = "please add types to this python file:\n" + python_file
+    python_typed_file = create_typed_python_file(
+        api_key=os.getenv('OPENAI_API_KEY'),
+        prompt=prompt,
+        window=50,
+        max_len=3000,
+        max_tokens=50
+    )
+    print(python_typed_file)
+    with open("/Users/itayd/PycharmProjects/AutoPyType/examples/example_typed.py", "w") as f:
+        f.write(python_typed_file)
+    # rand = "Today is the the day that I will start to learn how to use openai, this is so exciting, I can't wait to start. "
+    #            "by gaining the abbility to use openai I will be able to do so many things, I will be able to create a "
+#         api_key = os.environ['OPENAI_API_KEY']
+#     openai.api_key = api_key
+#     # list engines
+#     engines = openai.Engine.list()
+#
+#     # print the first engine's id
+#     # print(engines.data[0].id)
+#
+#     # create a completion
+#     completion = openai.Completion.create(engine="ada", prompt="Hello world")
+#
+#     # print the completion
+#     # print(completion.choices[0].text)
+#
+#     # prompt = "say this is a text"
+#     response = openai.Completion.create(
+#     model = "text-davinci-003",
+#     prompt = prompt,
+#     max_tokens = 7,
+#     temperature = 0
+#
+# )
+# print(response.choices[0].text)
+# print(response)
+
+# import requests
+#
+# url = "https://api.openai.com/v1/edits"
+#
+# payload = {
+#     "model": "text-davinci-edit-001",
+#     "input": "What day of the wek is it?",
+#     "instruction": "Fix the spelling mistakes"
+# }
+# headers = {
+#     "Content-Type": "application/json",
+#     "Authorization": f"Bearer {api_key}"
+# }
+#
+# response = requests.request("POST", url, json=payload, headers=headers)
+#
+# print(response.text)

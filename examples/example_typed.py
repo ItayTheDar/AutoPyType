@@ -5,32 +5,37 @@ import os
 from google.cloud import storage
 from contextlib import closing
 import pickle as pkl
+from typing import List, Tuple
 
 
 class ReadPostingsCloud:
+    TUPLE_SIZE: int = 6
+    TUPLE_SIZE_BODY: int = 8
+    TF_MASK: int = 2 ** 16 - 1  # Masking the 16 low bits of an integer
+    client: storage.Client
+    bucket: storage.Bucket
 
-    def __init__(self, bucket_name):
-        self.TUPLE_SIZE = 6
-        self.TUPLE_SIZE_BODY = 8
-        self.TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
+    def __init__(self, bucket_name: str) -> None:
         self.client = storage.Client()
         self.bucket = self.client.get_bucket(bucket_name)
 
-    def download_from_buck(self, source, dest):
+    def download_from_buck(self, source: str, dest: str) -> None:
         blob = self.bucket.get_blob(source)
         blob.download_to_filename(dest)
 
-    def get_pickle_file(self, source, dest):
+    def get_pickle_file(self, source: str, dest: str) -> Any:
         if dest not in os.listdir("."):
             self.download_from_buck(source, dest)
         with open(dest, "rb") as f:
             return pkl.load(f)
 
-    def get_inverted_index(self, source_idx, dest_file):
+    def get_inverted_index(self, source_idx: str, dest_file: str) -> InvertedIndex:
         self.download_from_buck(source_idx, dest_file)
         return InvertedIndex().read_index(".", dest_file.split(".")[0])
 
-    def read_posting_list(self, inverted, w, index_name, isBody=False, is_production=False):
+    def read_posting_list(
+            self, inverted: InvertedIndex, w: str, index_name: str, isBody: bool = False, is_production: bool = False
+    ) -> List[Tuple[int, Union[int, float]]]:
         s = time.time()
         try:
             with closing(MultiFileReader()) as reader:
@@ -59,12 +64,4 @@ class ReadPostingsCloud:
                         except Exception as e:
                             continue
                 else:
-                    b = reader.read(locs, inverted.df[w] * self.TUPLE_SIZE)
-                    for i in range(inverted.df[w]):
-                        doc_id = int.from_bytes(b[i * self.TUPLE_SIZE:i * self.TUPLE_SIZE + 4], 'big')
-                        tf = int.from_bytes(b[i * self.TUPLE_SIZE + 4:(i + 1) * self.TUPLE_SIZE], 'big')
-                        posting_list.append((doc_id, tf))
-                print(time.time() - s)
-                return posting_list
-        except IndexError:
-            return []
+                    pass
