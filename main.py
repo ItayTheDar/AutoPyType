@@ -62,22 +62,25 @@ def send_file_to_openai(file: str, batch_size: int = 10) -> List[str]:
 
 
 def create_typed_python_file(api_key: str, prompt: str, window: int = 20, max_len: int = 100, max_tokens=42):
+    global location_end_prompt
     import openai
     logger.info("creating a story")
     openai.api_key = api_key
     logger.info("api key is set")
     story = prompt
     logger.info("story is set")
+    i = 0
     while len(story.split(" ")) < max_len:
         logger.info("story is less than max_len - starting to generate the next piece of the story")
         response = openai.Completion.create(
             model="text-davinci-003",
             prompt=prompt,
-            max_tokens=max_tokens,
-            temperature=0
+            max_tokens=max_tokens
         )
         logger.info(f"response is ready - {response.choices[0].text}")
         old_story = story
+        if i == 0:
+            location_end_prompt = len(old_story)
         story += response.choices[0].text
         if old_story == story:
             logger.info("story is not changing - breaking the loop")
@@ -88,7 +91,7 @@ def create_typed_python_file(api_key: str, prompt: str, window: int = 20, max_le
     import pprint
     pprint.pprint(story)
 
-    return story
+    return story[location_end_prompt:]
 
 
 if __name__ == '__main__':
@@ -96,13 +99,17 @@ if __name__ == '__main__':
     # prompt = "please generate a function that will get a list of numbers and return the sum of the numbers: \n def sum_of_numbers(numbers):"
     # prompt = "please create a small flask application that helps students to sign they're courses\n Notes: make this function with types, logs and well documented:"
     python_file = open("/Users/itayd/PycharmProjects/AutoPyType/examples/example.py", "r").read()
-    prompt = "please add types to this python file:\n" + python_file
+    prompt = "please add type hints to each and every variable in each" \
+             " class or function. if the type is not yet imported, " \
+             "please import it. also, please add logs to the code using logging library." \
+             "\n this is the code:\n" + python_file
+    base_tokens = 4096
     python_typed_file = create_typed_python_file(
         api_key=os.getenv('OPENAI_API_KEY'),
         prompt=prompt,
         window=50,
-        max_len=3000,
-        max_tokens=50
+        max_len=len(prompt.split(" ")) + 100,
+        max_tokens=base_tokens - len(prompt.split(" "))
     )
     print(python_typed_file)
     with open("/Users/itayd/PycharmProjects/AutoPyType/examples/example_typed.py", "w") as f:
