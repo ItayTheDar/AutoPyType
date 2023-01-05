@@ -105,8 +105,10 @@ class ValidatorParser:
 
 if __name__ == '__main__':
     path = Path(__file__).parent.parent.parent
+    path_n = "/Users/itayd/PycharmProjects/openai-python/openai/openai_object.py"
+    path_t = "/Users/itayd/PycharmProjects/openai-python/openai/openai_object_typed.py"
     val = ValidatorParser()
-    print(val.validate(path / "examples/example.py"))
+    print(val.validate(path_n))
     # print(val.validate(path / "examples/test.py"))
-    print(val.validate(path / "examples/example_typed.py"))
+    print(val.validate(path_t))
     # print(val.validate_function_signature("def hello(a: int, b: int) -> int:"))

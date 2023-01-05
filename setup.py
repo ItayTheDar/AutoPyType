@@ -18,8 +18,8 @@ def load_requires(path):
 
 setup(
     name="AutoPyType",
-    version="0.1.0",
-    description="tool for automatically generating python type hints",
+    version="0.0.1",
+    description="tool for automatically generating python type hints, logs and documentation",
     long_description=load_long_description("README.md"),
     url="https://github.com/ItayTheDar/AutoPyType.git",
     author="Itay Dar",
@@ -30,7 +30,7 @@ setup(
     install_requires=load_requires("requirements.txt"),
     entry_points={
         "console_scripts": [
-            "autopy = autopy.cli.main:autopy_cli",
+            "autopy_type = autopy_type.cli.main:autopy_cli",
         ],
     },
     include_package_data=True,

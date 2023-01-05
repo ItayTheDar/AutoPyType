@@ -1,1 +1,1 @@
-from autopy.autopy import AutoPy
+from autopy.type.autopy_type import AutoPy

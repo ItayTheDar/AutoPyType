@@ -1,13 +1,7 @@
-import os
-from pathlib import Path
-import timeit
-import openai
-import logging
-from openai.openai_object import OpenAIObject
 import click
 from typing import List, Union
-from autopy.autopy import AutoPy
-from autopy.models.models import ModelType
+from autopy.type.autopy_type import AutoPy
+from autopy.models import ModelType
 
 
 @click.group()

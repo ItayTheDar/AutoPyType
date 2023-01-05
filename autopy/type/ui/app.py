@@ -12,8 +12,7 @@ def create_layout(file1, file2, highlights1, highlights2):
         while current_index < len(lines):
             line = lines[current_index]
             if current_highlight < len(highlights) and \
-                    highlights[current_highlight][0] <= current_index + 1 and \
-                    current_index + 1 <= highlights[current_highlight][1]:
+                    highlights[current_highlight][0] <= current_index + 1 <= highlights[current_highlight][1]:
                 highlighted_lines.append({
                     'type': 'code',
                     'props': {
